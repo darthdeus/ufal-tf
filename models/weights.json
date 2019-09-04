@@ -1,0 +1,14 @@
+{
+    "variables": [
+        {
+            "name": "w",
+            "shape": [2],
+            "values": [4, 5]
+        },
+        {
+            "name": "z",
+            "shape": [2],
+            "values": [7, 2]
+        }
+    ]
+}
