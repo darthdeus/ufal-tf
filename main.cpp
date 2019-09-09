@@ -6,35 +6,9 @@
 #include "include/json.hpp"
 #include "include/utf.h"
 
-//  utf::operation op_x = graph.get_op_checked("x");
-//  utf::operation op_add = graph.get_op_checked("add");
-//  utf::operation op_w_zeros = graph.get_op_checked("w/Initializer/zeros");
-//  utf::operation op_mul = graph.get_op_checked("w");
-
 using namespace std;
 
-struct foo {
-  int* x;
-
-  explicit foo(int* x) : x(x){};
-  foo(const foo&) = delete;
-  foo(foo&& h) noexcept : x(h.x) { h.x = nullptr; }
-
-  foo& operator=(const foo&) = delete;
-  foo& operator=(foo&& h) noexcept {
-    this->x = h.x;
-    h.x = nullptr;
-    return *this;
-  }
-
-  ~foo() { delete x; }
-};
-
 int main() {
-  //  vector<foo> foos;
-  //  foos.push_back(foo{nullptr});
-  //  foos = {foo(nullptr)};
-
   std::cout << "TF version: " << TF_Version() << std::endl;
 
   utf::buffer buf = read_file("models/graph.pb");
