@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(main)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(TF_VERSION 1.6.0)
 
 include_directories("${PROJECT_SOURCE_DIR}/versions/${TF_VERSION}/include"
