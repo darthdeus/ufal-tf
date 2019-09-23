@@ -20,7 +20,6 @@ class handle {
 
   ~handle() {
     if (obj) {
-//      std::cout << "deleting " << obj << std::endl;
       Deleter(obj);
     }
   }
@@ -35,27 +34,5 @@ class handle {
 //      f(obj);
 //    }
 //  };
-
-
-#define DEF_HANDLE(WRAPPER_NAME, LIB_NAME)                                  \
-  struct WRAPPER_NAME : public handle<TF_##LIB_NAME, TF_Delete##LIB_NAME> { \
-    WRAPPER_NAME() : handle(TF_New##LIB_NAME()) {}                          \
-    explicit WRAPPER_NAME(TF_##LIB_NAME* b) : handle(b) {}                  \
-  };
-
-#define TF_DATATYPE_WRAP(TYPE, DTYPE)       \
-  template <>                               \
-  TF_DataType type_to_tf_datatype<TYPE>() { \
-    return DTYPE;                           \
-  }
-
-template <typename T>
-TF_DataType type_to_tf_datatype() {
-  throw std::runtime_error("Template specialization must be called.");
-}
-
-TF_DATATYPE_WRAP(float, TF_FLOAT)
-TF_DATATYPE_WRAP(int32_t, TF_INT32)
-TF_DATATYPE_WRAP(int64_t, TF_INT64)
 
 }

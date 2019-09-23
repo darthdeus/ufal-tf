@@ -3,12 +3,23 @@
 #include <sstream>
 #include <string>
 
-#include "include/json.hpp"
 #include "include/utf.h"
 
 using namespace std;
 
 int main() {
+  utf::backend b2("versions/1.12.0/lib/libtensorflow.so");
+  utf::backend::instance = &b2;
+
+  std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
+
+  // utf::backend b1("libtensorflow.so");
+  // std::cout << "TF(dll) version: " << b1.TF_Version() << std::endl;
+
+  // auto g = backend.TF_NewGraph();
+
+  // return 0;
+
   std::cout << "TF version: " << TF_Version() << std::endl;
 
   utf::buffer buf = read_file("models/graph.pb");
@@ -19,53 +30,7 @@ int main() {
   utf::session sess{graph, sess_opts, status};
 
   status.check("New session");
-
-  vector<TF_Output> no_outputs;
-
-
-  ifstream is("models/weights.json");
-  using json = nlohmann::json;
-
-  json j;
-  is >> j;
-
-  vector<TF_Output> init_inputs;
-  vector<utf::tensor> init_input_tensors;
-  vector<TF_Operation*> init_targets;
-
-  for (auto& var : j["variables"]) {
-    string name = var["name"];
-
-    auto shape = var["shape"].get<vector<int64_t>>();
-    auto values = var["values"].get<vector<float>>();
-
-    init_inputs.push_back(graph.get_initializer(graph.get_op_checked(name).op));
-    init_targets.push_back(graph.get_op_checked(name + "/Assign").op);
-
-    init_input_tensors.push_back(utf::tensor::create<float>(shape, values));
-    cout << "var\t" << var["name"] << "\t" << var["shape"] << " ... " << shape[0] << endl;
-  }
-
-
-//  size_t pos = 0;
-//  TF_Operation* oper;
-//
-//  cout << "*************" << endl;
-//  while ((oper = TF_GraphNextOperation(graph.obj, &pos)) != nullptr) {
-//    cout << TF_OperationName(oper) << endl;
-//  }
-//  cout << "*************" << endl;
-//
-//  graph.get_initializer(graph.get_op_checked("w").op);
-//
-//      sess.run({graph.op_output("w/Initializer/ones")}, init_tensors,
-//               no_outputs, {graph.get_op_checked("w/Assign").op}, status);
-
-  sess.run(init_inputs, init_input_tensors, no_outputs, init_targets, status);
-
-  status.check("Session RUN - init all");
-
-
+  utf::initialize_variables("models/weights.json", graph, sess, status);
 
 
 
@@ -86,8 +51,6 @@ int main() {
   input_tensors.push_back(utf::tensor::create<float>(dims, values));
 
   vector<TF_Tensor*> output_tensors;
-
-  vector<utf::tensor> no_tensors;
 
   float* w;
 
@@ -125,6 +88,17 @@ int main() {
 
   auto z = utf::get_data<float>(output_tensors[1]);
   cout << "z = " << z[0] << "," << z[1] << endl;
+
+  sess.run_targets({graph.get_op_checked("train")}, status);
+  output_tensors = sess.run({graph.op_output("w")}, status);
+  w = utf::get_data<float>(output_tensors[0]);
+  cout << "w = " << w[0] << "," << w[1] << endl;
+
+  sess.run_targets({graph.get_op_checked("train")}, status);
+  output_tensors = sess.run({graph.op_output("w")}, status);
+  w = utf::get_data<float>(output_tensors[0]);
+  cout << "w = " << w[0] << "," << w[1] << endl;
+
 
   return 0;
 }

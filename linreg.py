@@ -14,6 +14,9 @@ z = tf.get_variable("z", shape=[2], initializer=tf.initializers.ones())
 #
 # y = tf.matmul(tf.transpose(ww), xx)
 
+# train = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(w, name="train")
+train = tf.train.GradientDescentOptimizer(learning_rate=1e-3).minimize(w, name="train")
+
 init = tf.global_variables_initializer()
 
 

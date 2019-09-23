@@ -1,23 +1,181 @@
 #pragma once
 
+#include <dlfcn.h>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <fstream>
 #include <memory>
 #include <sstream>
 #include <utility>
 #include <vector>
 
-#include <tensorflow/c/c_api.h>
+#include "tensorflow/c/c_api.h"
 
+#include "json.hpp"
 #include "utils.h"
 
 namespace utf {
+
 using namespace std;
 
-DEF_HANDLE(buffer, Buffer)
-DEF_HANDLE(session_options, SessionOptions)
-DEF_HANDLE(import_graph_def_options, ImportGraphDefOptions)
+template<typename T>
+class TD;
+
+#define UTF_STRINGIFY2(X) #X
+#define UTF_STRINGIFY(X) UTF_STRINGIFY2(X)
+
+#define UTF_GET_SYM(NAME) \
+  { \
+      this->NAME = (decltype(this->NAME)) dlsym(dl, UTF_STRINGIFY(NAME)); \
+      if (!this->NAME) { \
+        throw std::runtime_error(std::string{dlerror()}); \
+      } \
+  }
+
+
+class backend {
+  public:
+  const char* (*TF_Version)();
+
+  TF_Buffer* (*TF_NewBuffer)();
+  void (*TF_DeleteBuffer)(TF_Buffer*);
+
+  TF_SessionOptions* (*TF_NewSessionOptions)();
+  void (*TF_DeleteSessionOptions)(TF_SessionOptions*);
+
+  TF_ImportGraphDefOptions* (*TF_NewImportGraphDefOptions)();
+  void (*TF_DeleteImportGraphDefOptions)( TF_ImportGraphDefOptions* opts);
+
+  void* (*TF_TensorData)(const TF_Tensor*);
+  const char* (*TF_Message)(const TF_Status* s);
+  TF_Code (*TF_GetCode)(const TF_Status* s);
+
+  TF_Status* (*TF_NewStatus)();
+  void (*TF_DeleteStatus)(TF_Status*);
+
+  TF_Graph* (*TF_NewGraph)();
+  void (*TF_DeleteGraph)(TF_Graph*);
+  TF_Operation* (*TF_GraphOperationByName)(TF_Graph* graph, const char* oper_name);
+  void (*TF_GraphImportGraphDef)(TF_Graph* graph, const TF_Buffer* graph_def, const TF_ImportGraphDefOptions* options, TF_Status* status);
+  const char* (*TF_OperationName)(TF_Operation* oper);
+  TF_Operation* (*TF_GraphNextOperation)(TF_Graph* graph, size_t* pos);
+
+  size_t (*TF_DataTypeSize)(TF_DataType dt);
+  TF_Tensor* (*TF_AllocateTensor)(TF_DataType, const int64_t* dims, int num_dims, size_t len);
+  void (*TF_DeleteTensor)(TF_Tensor*);
+
+  TF_Session* (*TF_NewSession)(TF_Graph* graph, const TF_SessionOptions* opts, TF_Status* status);
+  void (*TF_DeleteSession)(TF_Session*, TF_Status* status);
+  void (*TF_SessionRun)(
+    TF_Session* session,
+    // RunOptions
+    const TF_Buffer* run_options,
+    // Input tensors
+    const TF_Output* inputs, TF_Tensor* const* input_values, int ninputs,
+    // Output tensors
+    const TF_Output* outputs, TF_Tensor** output_values, int noutputs,
+    // Target operations
+    const TF_Operation* const* target_opers, int ntargets,
+    // RunMetadata
+    TF_Buffer* run_metadata,
+    // Output status
+    TF_Status*);
+
+
+  backend(std::string dll_fname) {
+    // TODO dlfree
+    auto dl = dlopen(dll_fname.c_str(), RTLD_NOW);
+
+    if (!dl) {
+      throw std::runtime_error(std::string{dlerror()});
+    }
+
+    UTF_GET_SYM(TF_Version);
+
+    UTF_GET_SYM(TF_NewBuffer);
+    UTF_GET_SYM(TF_DeleteBuffer);
+
+    UTF_GET_SYM(TF_NewSessionOptions);
+    UTF_GET_SYM(TF_DeleteSessionOptions);
+
+    UTF_GET_SYM(TF_NewImportGraphDefOptions);
+    UTF_GET_SYM(TF_DeleteImportGraphDefOptions);
+
+    UTF_GET_SYM(TF_TensorData);
+    UTF_GET_SYM(TF_Message);
+    UTF_GET_SYM(TF_GetCode);
+
+    UTF_GET_SYM(TF_NewStatus);
+    UTF_GET_SYM(TF_DeleteStatus);
+
+    UTF_GET_SYM(TF_NewGraph);
+    UTF_GET_SYM(TF_DeleteGraph);
+    UTF_GET_SYM(TF_GraphOperationByName);
+    UTF_GET_SYM(TF_GraphImportGraphDef);
+    UTF_GET_SYM(TF_OperationName);
+    UTF_GET_SYM(TF_GraphNextOperation);
+
+    UTF_GET_SYM(TF_DataTypeSize);
+    UTF_GET_SYM(TF_AllocateTensor);
+    UTF_GET_SYM(TF_DeleteTensor);
+
+    UTF_GET_SYM(TF_NewSession);
+    UTF_GET_SYM(TF_DeleteSession);
+    UTF_GET_SYM(TF_SessionRun);
+
+    // this->TF_Version = (decltype(this->TF_Version)) dlsym(dl, "TF_Version");
+
+    // TD<decltype(TF_NewGraph)> x;
+
+    if (!this->TF_Version) {
+      throw std::runtime_error(std::string{dlerror()});
+    }
+  }
+
+  // TODO: fuj
+  static utf::backend* instance;
+  static utf::backend& current() { return *utf::backend::instance; }
+};
+
+// TODO: utf.cpp
+utf::backend* utf::backend::instance;
+
+#undef UTF_GET_SYM
+#undef UTF_STRINGIFY
+#undef UTF_STRINGIFY2
+
+
+#define UTF_DEF_HANDLE(WRAPPER_NAME, LIB_NAME)                                  \
+  struct WRAPPER_NAME : public handle<TF_##LIB_NAME, TF_Delete##LIB_NAME> { \
+    WRAPPER_NAME() : handle(backend::current().TF_New##LIB_NAME()) {}       \
+    explicit WRAPPER_NAME(TF_##LIB_NAME* b) : handle(b) {}                  \
+  };
+
+UTF_DEF_HANDLE(buffer, Buffer)
+UTF_DEF_HANDLE(session_options, SessionOptions)
+UTF_DEF_HANDLE(import_graph_def_options, ImportGraphDefOptions)
+
+#undef UTF_DEF_HANDLE
+
+
+#define UTF_DATATYPE_WRAP(TYPE, DTYPE)       \
+  template <>                               \
+  TF_DataType type_to_tf_datatype<TYPE>() { \
+    return DTYPE;                           \
+  }
+
+template <typename T>
+TF_DataType type_to_tf_datatype() {
+  throw std::runtime_error("Template specialization must be called.");
+}
+
+UTF_DATATYPE_WRAP(float, TF_FLOAT)
+UTF_DATATYPE_WRAP(int32_t, TF_INT32)
+UTF_DATATYPE_WRAP(int64_t, TF_INT64)
+
+#undef UTF_DATATYPE_WRAP
+
 
 template <typename T>
 T* get_data(TF_Tensor* tensor) {
@@ -65,10 +223,10 @@ class operation {
 
 class graph : public handle<TF_Graph, TF_DeleteGraph> {
  public:
-  graph() : handle(TF_NewGraph()) {}
+  graph() : handle(backend::current().TF_NewGraph()) {}
 
   operation get_op_checked(const std::string& name) {
-    operation op{TF_GraphOperationByName(obj, name.c_str())};
+    operation op{backend::current().TF_GraphOperationByName(obj, name.c_str())};
 
     if (!op.op) {
       std::stringstream ss;
@@ -91,21 +249,23 @@ class graph : public handle<TF_Graph, TF_DeleteGraph> {
     status s;
     import_graph_def_options opts;
 
-    TF_GraphImportGraphDef(g.obj, buf.obj, opts.obj, s.obj);
+    backend::current().TF_GraphImportGraphDef(g.obj, buf.obj, opts.obj, s.obj);
     s.check("Graph import");
 
     return g;
   }
 
   TF_Output get_initializer(TF_Operation* op) {
-    string name = TF_OperationName(op);
+    auto b = backend::current();
+
+    string name = b.TF_OperationName(op);
     string target = name + "/Initializer";
 
     size_t pos = 0;
     TF_Operation* oper;
 
-    while ((oper = TF_GraphNextOperation(obj, &pos)) != nullptr) {
-      string other_name = TF_OperationName(oper);
+    while ((oper = b.TF_GraphNextOperation(obj, &pos)) != nullptr) {
+      string other_name = b.TF_OperationName(oper);
 
       if (other_name.substr(0, target.size()) == target) {
         cout << "Found initializer " << name << " -> " << other_name << endl;
@@ -119,7 +279,7 @@ class graph : public handle<TF_Graph, TF_DeleteGraph> {
 
 void TF_DeleteSessionNoStatus(TF_Session* sess) {
   status s;
-  TF_DeleteSession(sess, s.obj);
+  backend::current().TF_DeleteSession(sess, s.obj);
 
   // TODO: check status
 }
@@ -138,11 +298,12 @@ TF_Tensor* allocate_uninitialized_tensor(vector<int64_t> dims) {
   //    TF_AllocateTensor(TF_FLOAT, dims, 1, dims[0] *
   //    TF_DataTypeSize(TF_FLOAT)), TF_AllocateTensor(TF_FLOAT, dims, 1,
   //    dims[0] * TF_DataTypeSize(TF_FLOAT))
+  auto b = backend::current();
 
   TF_DataType dtype = type_to_tf_datatype<T>();
-  int64_t bytes = items * TF_DataTypeSize(dtype);
+  int64_t bytes = items * b.TF_DataTypeSize(dtype);
 
-  TF_Tensor* tensor = TF_AllocateTensor(dtype, dims.data(), dims.size(), bytes);
+  TF_Tensor* tensor = b.TF_AllocateTensor(dtype, dims.data(), dims.size(), bytes);
 
   return tensor;
 }
@@ -154,8 +315,9 @@ TF_Tensor* allocate_tensor(vector<int64_t> dims, vector<T> values) {
   //    TF_DataTypeSize(TF_FLOAT))
 
   TF_Tensor* tensor = allocate_uninitialized_tensor<T>(dims);
+  auto b = backend::current();
 
-  auto tensor_data = reinterpret_cast<T*>(TF_TensorData(tensor));
+  auto tensor_data = reinterpret_cast<T*>(b.TF_TensorData(tensor));
   std::copy(values.begin(), values.end(), tensor_data);
 
   return tensor;
@@ -167,7 +329,7 @@ class tensor : public handle<TF_Tensor, TF_DeleteTensor> {
 
   template <typename T>
   T* get_data() {
-    return reinterpret_cast<T*>(TF_TensorData(obj));
+    return reinterpret_cast<T*>(backend::current().TF_TensorData(obj));
   }
 
   template <typename T>
@@ -189,7 +351,7 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
   graph& g;
 
   session(graph& g, session_options& sopts, status& s)
-      : g(g), handle(TF_NewSession(g.obj, sopts.obj, s.obj)) {}
+      : handle(backend::current().TF_NewSession(g.obj, sopts.obj, s.obj)), g(g) {}
 
   vector<TF_Tensor*> map_tensors(vector<tensor>& tensors) {
     vector<TF_Tensor*> results;
@@ -209,8 +371,9 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
       ops.push_back(op.op);
     }
 
-    TF_SessionRun(obj, nullptr, nullptr, nullptr, 0, nullptr, nullptr, 0,
-                  ops.data(), target_ops.size(), nullptr, status.obj);
+    backend::current().TF_SessionRun(obj, nullptr, nullptr, nullptr, 0,
+        nullptr, nullptr, 0, ops.data(), target_ops.size(), nullptr,
+        status.obj);
   }
 
   vector<TF_Tensor*> run(initializer_list<TF_Output> outputs, status& status) {
@@ -241,15 +404,15 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
                          vector<tensor>& input_values,
                          vector<TF_Output>& outputs,
                          vector<TF_Operation*> target_ops, status& status) {
-    TF_Operation* const target_opers[] = {};
+    // TF_Operation* const target_opers[] = {};
 
     vector<TF_Tensor*> output_values;
     output_values.reserve(outputs.size());
 
-    TF_SessionRun(obj, nullptr, inputs.data(), map_tensors(input_values).data(),
-                  inputs.size(), outputs.data(), output_values.data(),
-                  outputs.size(), target_ops.data(), target_ops.size(), nullptr,
-                  status.obj);
+    backend::current().TF_SessionRun(obj, nullptr, inputs.data(),
+        map_tensors(input_values).data(), inputs.size(), outputs.data(),
+        output_values.data(), outputs.size(), target_ops.data(),
+        target_ops.size(), nullptr, status.obj);
 
     return output_values;
   }
@@ -292,12 +455,50 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
 //  }
 //};
 
+
+  void initialize_variables(std::string weights_fname, graph& g, session& sess, status& s) {
+    vector<TF_Output> no_outputs;
+
+    ifstream is(weights_fname);
+    using json = nlohmann::json;
+
+    json j;
+    is >> j;
+
+    vector<TF_Output> init_inputs;
+    vector<utf::tensor> init_input_tensors;
+    vector<TF_Operation*> init_targets;
+
+    for (auto& var : j["variables"]) {
+      string name = var["name"];
+
+      auto shape = var["shape"].get<vector<int64_t>>();
+      auto values = var["values"].get<vector<float>>();
+
+      init_inputs.push_back(g.get_initializer(g.get_op_checked(name).op));
+      init_targets.push_back(g.get_op_checked(name + "/Assign").op);
+
+      init_input_tensors.push_back(utf::tensor::create<float>(shape, values));
+      cout << "var\t" << var["name"] << "\t" << var["shape"] << " ... " << shape[0] << endl;
+    }
+
+    sess.run(init_inputs, init_input_tensors, no_outputs, init_targets, s);
+
+    s.check("Session RUN - init all");
+  }
+
+
 }  // namespace utf
 
 void heap_buf_deallocator(void* data, size_t length) { free(data); }
 
 utf::buffer read_file(const char* fname) {
   FILE* f = fopen(fname, "rb");
+  if (!f) {
+    std::stringstream ss;
+    ss << "File '" << fname << "' does not exist." << std::endl;
+    throw std::runtime_error(ss.str());
+  }
 
   fseek(f, 0, SEEK_END);
   auto size = ftell(f);
@@ -306,7 +507,7 @@ utf::buffer read_file(const char* fname) {
   void* data = malloc(size);
   fread(data, 1, size, f);
 
-  TF_Buffer* buf = TF_NewBuffer();
+  TF_Buffer* buf = utf::backend::current().TF_NewBuffer();
   buf->data = data;
   buf->length = size;
   buf->data_deallocator = heap_buf_deallocator;
