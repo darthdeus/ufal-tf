@@ -9,13 +9,14 @@ using namespace std;
 
 int main() {
   utf::backend b2("versions/1.12.0/lib/libtensorflow.so");
-  utf::backend::instance = &b2;
-  // utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
-
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
+  utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
+  std::cout << "TF(dll) version: " << b3.TF_Version() << std::endl;
+
+  utf::backend::instance = &b2;
+
 
   // utf::backend b1("libtensorflow.so");
-  // std::cout << "TF(dll) version: " << b1.TF_Version() << std::endl;
 
   // auto g = backend.TF_NewGraph();
 
