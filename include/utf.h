@@ -141,16 +141,80 @@ class backend {
 // TODO: utf.cpp
 utf::backend* utf::backend::instance;
 
+
+
+template <typename Obj>
+class handle {
+ public:
+  Obj* obj = nullptr;
+  backend* b;
+
+  explicit handle(Obj* o) : obj(o), b(&backend::current()) {};
+  handle(const handle&) = delete;
+  handle(handle&& h) noexcept : obj(h.obj), b(h.b) { h.obj = nullptr; h.b = nullptr; }
+
+  handle& operator=(const handle&) = delete;
+  handle& operator=(handle&& h) noexcept {
+    this->obj = h.obj;
+    this->b = h.b;
+    h.obj = nullptr;
+    h.b = nullptr;
+    return *this;
+  }
+
+  ~handle() {
+    if (obj) {
+
+      get_deleter<Obj>(b)(obj);
+
+      // Deleter(obj);
+    }
+  }
+};
+
+
 #undef UTF_GET_SYM
 #undef UTF_STRINGIFY
 #undef UTF_STRINGIFY2
 
+template <typename T>
+std::function<void(T*)> get_deleter(backend* b) {
+  T::potato;
+  throw std::runtime_error("Specialization not called");
+}
+
+#define UTF_GET_DELETER(TYPE, DELETER) \
+  template <> \
+  std::function<void(TYPE*)> get_deleter<TYPE>(backend* b) { \
+    return b->DELETER; \
+  }
+
+void TF_DeleteSessionNoStatus(TF_Session* sess, backend* b);
+
+template <>
+std::function<void(TF_Session*)> get_deleter<TF_Session>(backend* b) {
+  return [b](TF_Session* sess) { TF_DeleteSessionNoStatus(sess, b); };
+}
+
+// UTF_GET_DELETER(TF_Session, TF_DeleteSessionNoStatus)
+UTF_GET_DELETER(TF_Graph, TF_DeleteGraph)
+UTF_GET_DELETER(TF_Status, TF_DeleteStatus)
+UTF_GET_DELETER(TF_Tensor, TF_DeleteTensor)
+
+#undef UTF_GET_DELETER
+
+// UTF_GET_DELETER(TF_Status, TF_DeleteStatus)
+// UTF_GET_DELETER(TF_ImportGraphDefOptions, TF_Deleteimportg)
 
 #define UTF_DEF_HANDLE(WRAPPER_NAME, LIB_NAME)                                  \
-  struct WRAPPER_NAME : public handle<TF_##LIB_NAME, TF_Delete##LIB_NAME> { \
+  struct WRAPPER_NAME : public handle<TF_##LIB_NAME> { \
     WRAPPER_NAME() : handle(backend::current().TF_New##LIB_NAME()) {}       \
     explicit WRAPPER_NAME(TF_##LIB_NAME* b) : handle(b) {}                  \
-  };
+  }; \
+  template <> \
+  std::function<void(TF_##LIB_NAME*)> get_deleter<TF_##LIB_NAME>(backend* b) { \
+    return b->TF_Delete##LIB_NAME; \
+  }
 
 UTF_DEF_HANDLE(buffer, Buffer)
 UTF_DEF_HANDLE(session_options, SessionOptions)
@@ -158,23 +222,44 @@ UTF_DEF_HANDLE(import_graph_def_options, ImportGraphDefOptions)
 
 #undef UTF_DEF_HANDLE
 
+// #define UTF_TYPE_DELETER(TYPE, DELETER) \
+//   template <> \
+//   void (*type_deleter(void))(TYPE* t) { \
+//     return t.backend.DELETER; \
+//   }
+//
+//
+// template <typename T>
+// void (*type_deleter(void))(T* t) {
+//     throw std::runtime_error("Template specialization must be called");
+// }
+//
+// UTF_TYPE_DELETER(buffer, TF_DeleteBuffer)
+//
+// #undef UTF_TYPE_DELETER
 
-#define UTF_DATATYPE_WRAP(TYPE, DTYPE)       \
-  template <>                               \
-  TF_DataType type_to_tf_datatype<TYPE>() { \
-    return DTYPE;                           \
-  }
+
+
+// #define UTF_DATATYPE_WRAP(TYPE, DTYPE)       \
+//   template <>                               \
+//   TF_DataType type_to_tf_datatype<TYPE>() { \
+//     return DTYPE;                           \
+//   }
 
 template <typename T>
 TF_DataType type_to_tf_datatype() {
   throw std::runtime_error("Template specialization must be called.");
 }
 
-UTF_DATATYPE_WRAP(float, TF_FLOAT)
-UTF_DATATYPE_WRAP(int32_t, TF_INT32)
-UTF_DATATYPE_WRAP(int64_t, TF_INT64)
+template <> TF_DataType type_to_tf_datatype<float>() { return TF_FLOAT; }
+template <> TF_DataType type_to_tf_datatype<int32_t>() { return TF_INT32; }
+template <> TF_DataType type_to_tf_datatype<int64_t>() { return TF_INT64; }
 
-#undef UTF_DATATYPE_WRAP
+// UTF_DATATYPE_WRAP(float, TF_FLOAT)
+// UTF_DATATYPE_WRAP(int32_t, TF_INT32)
+// UTF_DATATYPE_WRAP(int64_t, TF_INT64)
+
+// #undef UTF_DATATYPE_WRAP
 
 
 template <typename T>
@@ -182,9 +267,9 @@ T* get_data(TF_Tensor* tensor) {
   return reinterpret_cast<T*>(TF_TensorData(tensor));
 }
 
-class status : public handle<TF_Status, TF_DeleteStatus> {
+class status : public handle<TF_Status> {
  public:
-  status() : handle(TF_NewStatus()) {}
+  status() : handle(backend::current().TF_NewStatus()) {}
 
   void check(const std::string& str) {
     TF_Code code = TF_GetCode(obj);
@@ -221,7 +306,7 @@ class operation {
   }
 };
 
-class graph : public handle<TF_Graph, TF_DeleteGraph> {
+class graph : public handle<TF_Graph> {
  public:
   graph() : handle(backend::current().TF_NewGraph()) {}
 
@@ -277,13 +362,6 @@ class graph : public handle<TF_Graph, TF_DeleteGraph> {
   }
 };
 
-void TF_DeleteSessionNoStatus(TF_Session* sess) {
-  status s;
-  backend::current().TF_DeleteSession(sess, s.obj);
-
-  // TODO: check status
-}
-
 class tensor;
 
 template <typename T>
@@ -323,7 +401,7 @@ TF_Tensor* allocate_tensor(vector<int64_t> dims, vector<T> values) {
   return tensor;
 }
 
-class tensor : public handle<TF_Tensor, TF_DeleteTensor> {
+class tensor : public handle<TF_Tensor> {
  public:
   explicit tensor(TF_Tensor* t) : handle(t) {}
 
@@ -347,7 +425,7 @@ class tensor : public handle<TF_Tensor, TF_DeleteTensor> {
   }
 };
 
-struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
+struct session : public handle<TF_Session> {
   graph& g;
 
   session(graph& g, session_options& sopts, status& s)
@@ -407,7 +485,7 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
     // TF_Operation* const target_opers[] = {};
 
     vector<TF_Tensor*> output_values;
-    output_values.reserve(outputs.size());
+    output_values.resize(outputs.size());
 
     backend::current().TF_SessionRun(obj, nullptr, inputs.data(),
         map_tensors(input_values).data(), inputs.size(), outputs.data(),
@@ -486,6 +564,15 @@ struct session : public handle<TF_Session, TF_DeleteSessionNoStatus> {
 
     s.check("Session RUN - init all");
   }
+
+
+void TF_DeleteSessionNoStatus(TF_Session* sess, backend* b) {
+  status s;
+  b->TF_DeleteSession(sess, s.obj);
+
+  // TODO: check status
+  s.check("delete session");
+}
 
 
 }  // namespace utf

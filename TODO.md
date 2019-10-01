@@ -12,18 +12,21 @@ make: *** [all] Error 2
 
 
 - gpu - allow growth
-  - protobuf
+  - protobuf ConfigProto
 
 - out of memory
+
 - trenovani
   - sgd ok
   - adam?
 
 - dlopen - backend instance
   - jak ji budu predavat ... staticka backend::current()?
+  - vytahuju si deletovaci backend z current kdyz se vytvari objekt (zapamatuju si pri vytvareni)
 
 - cpu threads - sess opts
   - protobuf jako u allow_growth
+  - serializovat protobuf z pythonu
 
 - tf 2.0rc0 - koukat na tf_version
 - kvantizace / kmeans

@@ -10,6 +10,7 @@ using namespace std;
 int main() {
   utf::backend b2("versions/1.12.0/lib/libtensorflow.so");
   utf::backend::instance = &b2;
+  // utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
 
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
 
@@ -28,8 +29,11 @@ int main() {
   utf::status status;
   utf::session_options sess_opts;
   utf::session sess{graph, sess_opts, status};
-
   status.check("New session");
+
+  sess.run_targets({graph.get_op_checked("init")}, status);
+  status.check("init");
+
   utf::initialize_variables("models/weights.json", graph, sess, status);
 
 
@@ -80,6 +84,7 @@ int main() {
   //                            {graph.op_output("w/read")}, status);
 
   output_tensors = sess.run({graph.op_output("w"), graph.op_output("z")}, status);
+  cout << "aa " << output_tensors.size() << endl;
 
   status.check("Session RUN - w 2");
 
@@ -95,10 +100,32 @@ int main() {
   cout << "w = " << w[0] << "," << w[1] << endl;
 
   sess.run_targets({graph.get_op_checked("train")}, status);
+  status.check("train");
   output_tensors = sess.run({graph.op_output("w")}, status);
+  status.check("w");
+  cout << "aa " << output_tensors.size() << endl;
   w = utf::get_data<float>(output_tensors[0]);
   cout << "w = " << w[0] << "," << w[1] << endl;
 
+  for (int i = 0; i < 2; i++) {
+    sess.run_targets({graph.get_op_checked("train")}, status);
+    status.check("train");
+
+    // output_tensors = sess.run({graph.op_output("w"), graph.op_output("beta1_power"),
+    //     graph.op_output("w/Adam"), graph.op_output("w/Adam_1")}, status);
+    output_tensors = sess.run({graph.op_output("w")}, status);
+    status.check("w");
+
+    cout << output_tensors.size() << "\t";
+    for (auto&& x : output_tensors) {
+      w = utf::get_data<float>(x);
+      cout << " " << w[0] << "," << w[1] << "\t";
+    }
+    cout << endl;
+
+    // w = utf::get_data<float>(output_tensors[0]);
+    // cout << "w = " << w[0] << "," << w[1] << endl;
+  }
 
   return 0;
 }

@@ -308,6 +308,486 @@ node {
   }
 }
 node {
+  name: "beta1_power/initial_value"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.8999999761581421
+      }
+    }
+  }
+}
+node {
+  name: "beta1_power"
+  op: "VariableV2"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "beta1_power/Assign"
+  op: "Assign"
+  input: "beta1_power"
+  input: "beta1_power/initial_value"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "beta1_power/read"
+  op: "Identity"
+  input: "beta1_power"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
+  name: "beta2_power/initial_value"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.9990000128746033
+      }
+    }
+  }
+}
+node {
+  name: "beta2_power"
+  op: "VariableV2"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "beta2_power/Assign"
+  op: "Assign"
+  input: "beta2_power"
+  input: "beta2_power/initial_value"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "beta2_power/read"
+  op: "Identity"
+  input: "beta2_power"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
+  name: "w/Adam/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 2
+          }
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "w/Adam"
+  op: "VariableV2"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "w/Adam/Assign"
+  op: "Assign"
+  input: "w/Adam"
+  input: "w/Adam/Initializer/zeros"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "w/Adam/read"
+  op: "Identity"
+  input: "w/Adam"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
+  name: "w/Adam_1/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 2
+          }
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "w/Adam_1"
+  op: "VariableV2"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "w/Adam_1/Assign"
+  op: "Assign"
+  input: "w/Adam_1"
+  input: "w/Adam_1/Initializer/zeros"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "w/Adam_1/read"
+  op: "Identity"
+  input: "w/Adam_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
   name: "train/learning_rate"
   op: "Const"
   attr {
@@ -323,16 +803,86 @@ node {
         dtype: DT_FLOAT
         tensor_shape {
         }
-        float_val: 0.0010000000474974513
+        float_val: 0.10000000149011612
       }
     }
   }
 }
 node {
-  name: "train/update_w/ApplyGradientDescent"
-  op: "ApplyGradientDescent"
+  name: "train/beta1"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.8999999761581421
+      }
+    }
+  }
+}
+node {
+  name: "train/beta2"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.9990000128746033
+      }
+    }
+  }
+}
+node {
+  name: "train/epsilon"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 9.99999993922529e-09
+      }
+    }
+  }
+}
+node {
+  name: "train/update_w/ApplyAdam"
+  op: "ApplyAdam"
   input: "w"
+  input: "w/Adam"
+  input: "w/Adam_1"
+  input: "beta1_power/read"
+  input: "beta2_power/read"
   input: "train/learning_rate"
+  input: "train/beta1"
+  input: "train/beta2"
+  input: "train/epsilon"
   input: "gradients/Fill"
   attr {
     key: "T"
@@ -354,15 +904,133 @@ node {
       b: false
     }
   }
+  attr {
+    key: "use_nesterov"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "train/mul"
+  op: "Mul"
+  input: "beta1_power/read"
+  input: "train/beta1"
+  input: "^train/update_w/ApplyAdam"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
+  name: "train/Assign"
+  op: "Assign"
+  input: "beta1_power"
+  input: "train/mul"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "train/mul_1"
+  op: "Mul"
+  input: "beta2_power/read"
+  input: "train/beta2"
+  input: "^train/update_w/ApplyAdam"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+}
+node {
+  name: "train/Assign_1"
+  op: "Assign"
+  input: "beta2_power"
+  input: "train/mul_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@w"
+      }
+    }
+  }
+  attr {
+    key: "use_locking"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "validate_shape"
+    value {
+      b: true
+    }
+  }
 }
 node {
   name: "train"
   op: "NoOp"
-  input: "^train/update_w/ApplyGradientDescent"
+  input: "^train/Assign"
+  input: "^train/Assign_1"
+  input: "^train/update_w/ApplyAdam"
 }
 node {
   name: "init"
   op: "NoOp"
+  input: "^beta1_power/Assign"
+  input: "^beta2_power/Assign"
+  input: "^w/Adam/Assign"
+  input: "^w/Adam_1/Assign"
   input: "^w/Assign"
   input: "^z/Assign"
 }

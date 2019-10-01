@@ -14,8 +14,8 @@ z = tf.get_variable("z", shape=[2], initializer=tf.initializers.ones())
 #
 # y = tf.matmul(tf.transpose(ww), xx)
 
-# train = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(w, name="train")
-train = tf.train.GradientDescentOptimizer(learning_rate=1e-3).minimize(w, name="train")
+train = tf.train.AdamOptimizer(learning_rate=1e-1).minimize(w, name="train")
+# train = tf.train.GradientDescentOptimizer(learning_rate=1e-3).minimize(w, name="train")
 
 init = tf.global_variables_initializer()
 
@@ -30,10 +30,13 @@ with open("models/graph.pb", "wb") as f:
 
     print(graph_def)
 
-# with tf.Session() as sess:
-#     sess.run(init)
-    # y_ = sess.run(y, {x: [1.0, 1.0]})
-    # print(y_)
+with tf.Session() as sess:
+    sess.run(init)
+    w_ = sess.run(w)
+    print(w_)
+    sess.run(train)
+    w_ = sess.run(w)
+    print(w_)
 
 
 
