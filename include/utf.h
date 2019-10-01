@@ -262,22 +262,22 @@ template <> TF_DataType type_to_tf_datatype<int64_t>() { return TF_INT64; }
 // #undef UTF_DATATYPE_WRAP
 
 
-template <typename T>
-T* get_data(TF_Tensor* tensor) {
-  return reinterpret_cast<T*>(TF_TensorData(tensor));
-}
+// template <typename T>
+// T* get_data(TF_Tensor* tensor) {
+//   return reinterpret_cast<T*>(TF_TensorData(tensor));
+// }
 
 class status : public handle<TF_Status> {
  public:
   status() : handle(backend::current().TF_NewStatus()) {}
 
   void check(const std::string& str) {
-    TF_Code code = TF_GetCode(obj);
+    TF_Code code = b->TF_GetCode(obj);
 
     if (code == 0) {
       std::cout << str << " OK" << std::endl;
     } else {
-      const char* message = TF_Message(obj);
+      const char* message = b->TF_Message(obj);
 
       std::stringstream ss;
 
@@ -454,7 +454,7 @@ struct session : public handle<TF_Session> {
         status.obj);
   }
 
-  vector<TF_Tensor*> run(initializer_list<TF_Output> outputs, status& status) {
+  vector<tensor> run(initializer_list<TF_Output> outputs, status& status) {
     vector<TF_Output> no_inputs{};
     vector<utf::tensor> no_input_tensors{};
     vector<TF_Operation*> no_targets;
@@ -478,7 +478,7 @@ struct session : public handle<TF_Session> {
     run(inputs, input_values, no_outputs, target_ops, status);
   }
 
-  vector<TF_Tensor*> run(vector<TF_Output>& inputs,
+  vector<tensor> run(vector<TF_Output>& inputs,
                          vector<tensor>& input_values,
                          vector<TF_Output>& outputs,
                          vector<TF_Operation*> target_ops, status& status) {
@@ -492,7 +492,13 @@ struct session : public handle<TF_Session> {
         output_values.data(), outputs.size(), target_ops.data(),
         target_ops.size(), nullptr, status.obj);
 
-    return output_values;
+    vector<tensor> output_tensors;
+
+    for (auto&& value: output_values) {
+      output_tensors.emplace_back(value);
+    }
+
+    return output_tensors;
   }
 };
 

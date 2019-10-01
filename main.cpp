@@ -21,7 +21,7 @@ int main() {
 
   // return 0;
 
-  std::cout << "TF version: " << TF_Version() << std::endl;
+  // std::cout << "TF version: " << TF_Version() << std::endl;
 
   utf::buffer buf = read_file("models/graph.pb");
 
@@ -54,7 +54,7 @@ int main() {
   vector<utf::tensor> input_tensors;
   input_tensors.push_back(utf::tensor::create<float>(dims, values));
 
-  vector<TF_Tensor*> output_tensors;
+  vector<utf::tensor> output_tensors;
 
   float* w;
 
@@ -88,15 +88,15 @@ int main() {
 
   status.check("Session RUN - w 2");
 
-  w = utf::get_data<float>(output_tensors[0]);
+  w = output_tensors[0].get_data<float>();
   cout << "w = " << w[0] << "," << w[1] << endl;
 
-  auto z = utf::get_data<float>(output_tensors[1]);
+  auto z = output_tensors[1].get_data<float>();
   cout << "z = " << z[0] << "," << z[1] << endl;
 
   sess.run_targets({graph.get_op_checked("train")}, status);
   output_tensors = sess.run({graph.op_output("w")}, status);
-  w = utf::get_data<float>(output_tensors[0]);
+  w = output_tensors[0].get_data<float>();
   cout << "w = " << w[0] << "," << w[1] << endl;
 
   sess.run_targets({graph.get_op_checked("train")}, status);
@@ -104,7 +104,7 @@ int main() {
   output_tensors = sess.run({graph.op_output("w")}, status);
   status.check("w");
   cout << "aa " << output_tensors.size() << endl;
-  w = utf::get_data<float>(output_tensors[0]);
+  w = output_tensors[0].get_data<float>();
   cout << "w = " << w[0] << "," << w[1] << endl;
 
   for (int i = 0; i < 2; i++) {
@@ -118,7 +118,7 @@ int main() {
 
     cout << output_tensors.size() << "\t";
     for (auto&& x : output_tensors) {
-      w = utf::get_data<float>(x);
+      w = x.get_data<float>();
       cout << " " << w[0] << "," << w[1] << "\t";
     }
     cout << endl;

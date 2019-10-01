@@ -10,8 +10,13 @@ include_directories("${PROJECT_SOURCE_DIR}/versions/${TF_VERSION}/include"
 
 link_directories("${PROJECT_SOURCE_DIR}/versions/${TF_VERSION}/lib")
 
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+# target_link_libraries(my_app Threads::Threads)
+
 add_executable(main main.cpp)
-target_link_libraries(main dl tensorflow)
+target_link_libraries(main dl Threads::Threads)
 
 if (WIN32)
   set(TF_LIBNAME tensorflow.dll)
