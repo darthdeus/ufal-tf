@@ -13,7 +13,6 @@ link_directories("${PROJECT_SOURCE_DIR}/versions/${TF_VERSION}/lib")
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-# target_link_libraries(my_app Threads::Threads)
 
 add_executable(main main.cpp)
 target_link_libraries(main dl Threads::Threads)
@@ -29,8 +28,3 @@ endif (MSVC)
 if (UNIX)
   set(TF_LIBNAME libtensorflow.so)
 endif (UNIX)
-
-add_custom_command(TARGET main POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/versions/${TF_VERSION}/lib/${TF_LIBNAME}"
-        $<TARGET_FILE_DIR:main>/libtensorflow.so)
