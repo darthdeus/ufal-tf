@@ -7,15 +7,24 @@
 
 using namespace std;
 
+void run();
+
 int main() {
-  utf::backend b2("versions/1.12.0/lib/libtensorflow.so");
+  utf::backend b2("versions/1.6.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
+
+  utf::backend::instance = &b2;
+  run();
+
   utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b3.TF_Version() << std::endl;
 
-  utf::backend::instance = &b2;
+  utf::backend::instance = &b3;
+  run();
 
+}
 
+void run() {
   // utf::backend b1("libtensorflow.so");
 
   // auto g = backend.TF_NewGraph();
@@ -127,6 +136,4 @@ int main() {
     // w = utf::get_data<float>(output_tensors[0]);
     // cout << "w = " << w[0] << "," << w[1] << endl;
   }
-
-  return 0;
 }

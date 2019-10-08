@@ -85,6 +85,7 @@ class backend {
 
   backend(std::string dll_fname) {
     // TODO dlfree
+    // auto dl = dlmopen(LM_ID_NEWLM, dll_fname.c_str(), RTLD_NOW);
     auto dl = dlopen(dll_fname.c_str(), RTLD_NOW);
 
     if (!dl) {
