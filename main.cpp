@@ -13,6 +13,8 @@ int main() {
   utf::backend b2("versions/1.6.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
 
+   // '\x10o(\x018\x01H\x01'
+
   utf::backend::instance = &b2;
   run();
 
@@ -38,6 +40,13 @@ void run() {
   utf::graph graph = utf::graph::from_protobuf(buf);
   utf::status status;
   utf::session_options sess_opts;
+
+
+  int buf3[] = {0x10, 0x6f, 0x28, 0x01, 0x38, 0x01, 0x48, 0x01};
+  utf::backend::current().TF_SetConfig(sess_opts.obj,
+      buf3, sizeof(buf3), status.obj);
+  status.check("set session options");
+
   utf::session sess{graph, sess_opts, status};
   status.check("New session");
 
