@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <array>
 #include <iostream>
 #include <sstream>
@@ -10,19 +11,18 @@ using namespace std;
 void run();
 
 int main() {
-  utf::backend b2("versions/1.6.0/lib/libtensorflow.so");
+  // utf::backend b2("versions/1.6.0/lib/libtensorflow.so");
+  utf::backend b2("versions/1.12.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
-
-   // '\x10o(\x018\x01H\x01'
 
   utf::backend::instance = &b2;
   run();
 
-  utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
-  std::cout << "TF(dll) version: " << b3.TF_Version() << std::endl;
-
-  utf::backend::instance = &b3;
-  run();
+  // utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
+  // std::cout << "TF(dll) version: " << b3.TF_Version() << std::endl;
+  //
+  // utf::backend::instance = &b3;
+  // run();
 
 }
 
@@ -42,8 +42,9 @@ void run() {
   utf::session_options sess_opts;
 
 
-  int buf3[] = {0x10, 0x6f, 0x28, 0x01, 0x38, 0x01, 0x48, 0x01};
-  utf::backend::current().TF_SetConfig(sess_opts.obj,
+  uint8_t buf3[] = {0x10, 0x6f, 0x28, 0x01, 0x38, 0x01, 0x48, 0x01};
+  auto&& b = utf::backend::current();
+  b.TF_SetConfig(sess_opts.obj,
       buf3, sizeof(buf3), status.obj);
   status.check("set session options");
 

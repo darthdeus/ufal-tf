@@ -20,12 +20,12 @@ with warnings.catch_warnings():
 
     serialized3 = intra3.SerializeToString()
     print("3: {}".format(serialized3))
+    print(", ".join("{:02x}".format(ord(c)) for c in serialized3.decode("ascii")))
     parsed3 = tf.compat.v1.ConfigProto().FromString(serialized3)
 
     serialized5 = intra5.SerializeToString()
     print("5: {}".format(serialized5))
     parsed5 = tf.compat.v1.ConfigProto().FromString(serialized5)
-
 
     ipdb.set_trace()
 
