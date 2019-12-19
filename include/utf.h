@@ -27,7 +27,7 @@ class TD;
 
 #define UTF_GET_SYM(NAME) \
   { \
-      this->NAME = (decltype(this->NAME)) dlsym(dl, UTF_STRINGIFY(NAME)); \
+      this->NAME = (decltype(this->NAME)) dlsym(dl_handle, UTF_STRINGIFY(NAME)); \
       if (!this->NAME) { \
         throw std::runtime_error(std::string{dlerror()}); \
       } \
@@ -35,7 +35,9 @@ class TD;
 
 
 class backend {
-  public:
+public:
+  void* dl_handle;
+
   const char* (*TF_Version)();
 
   TF_Buffer* (*TF_NewBuffer)();
@@ -82,13 +84,13 @@ class backend {
     // Output status
     TF_Status*);
 
-
   backend(std::string dll_fname) {
-    // TODO dlfree
-    // auto dl = dlmopen(LM_ID_NEWLM, dll_fname.c_str(), RTLD_NOW);
-    auto dl = dlopen(dll_fname.c_str(), RTLD_NOW);
+    // dl_handle = dlmopen(LM_ID_NEWLM, dll_fname.c_str(), RTLD_NOW | RTLD_DEEPBIND);
+    dl_handle = dlopen(dll_fname.c_str(), RTLD_NOW | RTLD_DEEPBIND);
 
-    if (!dl) {
+    // TODO: monolithical build
+    // 2.0
+    if (!dl_handle) {
       throw std::runtime_error(std::string{dlerror()});
     }
 
@@ -131,6 +133,21 @@ class backend {
 
     if (!this->TF_Version) {
       throw std::runtime_error(std::string{dlerror()});
+    }
+  }
+
+  backend(const backend&) = delete;
+  backend(backend&& rhs) : dl_handle(rhs.dl_handle) { rhs.dl_handle = nullptr; }
+  backend& operator=(const backend&) = delete;
+  backend& operator=(backend&& rhs) {
+    this->dl_handle = rhs.dl_handle;
+    rhs.dl_handle = nullptr;
+    return *this;
+  }
+
+  ~backend() {
+    if (dl_handle) {
+      dlclose(dl_handle);
     }
   }
 
@@ -342,7 +359,7 @@ class graph : public handle<TF_Graph> {
   }
 
   TF_Output get_initializer(TF_Operation* op) {
-    auto b = backend::current();
+    auto&& b = backend::current();
 
     string name = b.TF_OperationName(op);
     string target = name + "/Initializer";
@@ -377,7 +394,7 @@ TF_Tensor* allocate_uninitialized_tensor(vector<int64_t> dims) {
   //    TF_AllocateTensor(TF_FLOAT, dims, 1, dims[0] *
   //    TF_DataTypeSize(TF_FLOAT)), TF_AllocateTensor(TF_FLOAT, dims, 1,
   //    dims[0] * TF_DataTypeSize(TF_FLOAT))
-  auto b = backend::current();
+  auto&& b = backend::current();
 
   TF_DataType dtype = type_to_tf_datatype<T>();
   int64_t bytes = items * b.TF_DataTypeSize(dtype);
@@ -394,7 +411,7 @@ TF_Tensor* allocate_tensor(vector<int64_t> dims, vector<T> values) {
   //    TF_DataTypeSize(TF_FLOAT))
 
   TF_Tensor* tensor = allocate_uninitialized_tensor<T>(dims);
-  auto b = backend::current();
+  auto&& b = backend::current();
 
   auto tensor_data = reinterpret_cast<T*>(b.TF_TensorData(tensor));
   std::copy(values.begin(), values.end(), tensor_data);

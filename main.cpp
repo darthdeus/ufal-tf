@@ -10,13 +10,13 @@ using namespace std;
 void run();
 
 int main() {
-  utf::backend b2("versions/1.6.0/lib/libtensorflow.so");
+  utf::backend b2("versions/1.2.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b2.TF_Version() << std::endl;
 
   utf::backend::instance = &b2;
   run();
 
-  utf::backend b3("versions/1.14.0/lib/libtensorflow.so");
+  utf::backend b3("versions/1.6.0/lib/libtensorflow.so");
   std::cout << "TF(dll) version: " << b3.TF_Version() << std::endl;
 
   utf::backend::instance = &b3;
@@ -25,14 +25,6 @@ int main() {
 }
 
 void run() {
-  // utf::backend b1("libtensorflow.so");
-
-  // auto g = backend.TF_NewGraph();
-
-  // return 0;
-
-  // std::cout << "TF version: " << TF_Version() << std::endl;
-
   utf::buffer buf = read_file("models/graph.pb");
 
   utf::graph graph = utf::graph::from_protobuf(buf);

@@ -1,24 +1,11 @@
-- -ldl ???
-
-/usr/bin/ld: CMakeFiles/main.dir/main.cpp.o: undefined reference to symbol 'dlopen@@GLIBC_2.2.5'
-//lib/x86_64-linux-gnu/libdl.so.2: error adding symbols: DSO missing from command line
-collect2: error: ld returned 1 exit status
-CMakeFiles/main.dir/build.make:94: recipe for target 'main' failed
-make[2]: *** [main] Error 1
-CMakeFiles/Makefile2:67: recipe for target 'CMakeFiles/main.dir/all' failed
-make[1]: *** [CMakeFiles/main.dir/all] Error 2
-Makefile:83: recipe for target 'all' failed
-make: *** [all] Error 2
-
+- TODO: monolithical build
+- libdl bug
+- 2.0
 
 - gpu - allow growth
   - protobuf ConfigProto
 
 - out of memory
-
-- trenovani
-  - sgd ok
-  - adam?
 
 - dlopen - backend instance
   - jak ji budu predavat ... staticka backend::current()?
