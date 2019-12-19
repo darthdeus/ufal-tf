@@ -44,10 +44,12 @@ public:
   void (*TF_DeleteBuffer)(TF_Buffer*);
 
   TF_SessionOptions* (*TF_NewSessionOptions)();
+  void (*TF_SetConfig)(TF_SessionOptions* options, const void* proto,
+                     size_t proto_len, TF_Status* status);
   void (*TF_DeleteSessionOptions)(TF_SessionOptions*);
 
   TF_ImportGraphDefOptions* (*TF_NewImportGraphDefOptions)();
-  void (*TF_DeleteImportGraphDefOptions)( TF_ImportGraphDefOptions* opts);
+  void (*TF_DeleteImportGraphDefOptions)(TF_ImportGraphDefOptions* opts);
 
   void* (*TF_TensorData)(const TF_Tensor*);
   const char* (*TF_Message)(const TF_Status* s);
@@ -101,6 +103,7 @@ public:
 
     UTF_GET_SYM(TF_NewSessionOptions);
     UTF_GET_SYM(TF_DeleteSessionOptions);
+    UTF_GET_SYM(TF_SetConfig);
 
     UTF_GET_SYM(TF_NewImportGraphDefOptions);
     UTF_GET_SYM(TF_DeleteImportGraphDefOptions);

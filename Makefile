@@ -8,4 +8,3 @@ gcc:
 cmake:
 	cd build && make
 	./build/main
-

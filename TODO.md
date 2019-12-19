@@ -1,4 +1,3 @@
-- TODO: monolithical build
 - libdl bug
 - 2.0
 

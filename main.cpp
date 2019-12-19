@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <array>
 #include <iostream>
 #include <sstream>
@@ -30,6 +31,14 @@ void run() {
   utf::graph graph = utf::graph::from_protobuf(buf);
   utf::status status;
   utf::session_options sess_opts;
+
+
+  uint8_t buf3[] = {0x10, 0x6f, 0x28, 0x01, 0x38, 0x01, 0x48, 0x01};
+  auto&& b = utf::backend::current();
+  b.TF_SetConfig(sess_opts.obj,
+      buf3, sizeof(buf3), status.obj);
+  status.check("set session options");
+
   utf::session sess{graph, sess_opts, status};
   status.check("New session");
 
